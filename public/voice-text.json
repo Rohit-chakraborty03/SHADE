@@ -1,0 +1,270 @@
+[
+ {
+  "id": 0,
+  "titles": [
+   "about this project",
+   "welcome to shade"
+  ],
+  "en": "This project helps a city decide where to spend a small heat budget, so the people who suffer most are helped first.",
+  "bn": "এই ওয়েবসাইট দেখায়, গরমের সময় অল্প টাকা কোথায় খরচ করলে সবচেয়ে বেশি মানুষের উপকার হবে। যাঁরা সবচেয়ে বেশি কষ্ট পান, আগে তাঁদের সাহায্য করাই আমাদের লক্ষ্য।"
+ },
+ {
+  "id": 1,
+  "titles": [
+   "budget",
+   "total budget",
+   "set the total budget"
+  ],
+  "en": "This is the total money available. Make it bigger or smaller, and the plan will change to fit it.",
+  "bn": "এখানে ঠিক করবেন মোট কত টাকা খরচ করা যাবে। টাকা বেশি দিলে প্ল্যান বড় হবে, কম দিলে ছোট হবে।"
+ },
+ {
+  "id": 2,
+  "titles": [
+   "todays suggested split",
+   "cooling relief split",
+   "split it between two pools"
+  ],
+  "en": "Here you share the money between two things: lasting fixes like roofs and trees, and quick help like water and cool rooms. On a hotter day, more goes to quick help.",
+  "bn": "এই টাকা আমরা দুই ভাগে ভাগ করি। এক ভাগ যায় ছাদ আর গাছের মতো কাজে, যেগুলো অনেক বছর কাজে লাগে। আরেক ভাগ যায় জল আর ঠান্ডা ঘরের মতো সাহায্যে, যা এই গরমেই কাজে লাগে। যেদিন গরম বেশি, সেদিন দ্বিতীয় ভাগে বেশি টাকা যায়।"
+ },
+ {
+  "id": 3,
+  "titles": [
+   "how careful",
+   "choose how cautious to be"
+  ],
+  "en": "The tool runs fifty models, and they do not always agree. Normal uses the average. Careful plans for the worse case, so you are less likely to be let down.",
+  "bn": "আমরা পঞ্চাশটা আলাদা হিসাব চালাই, আর সেগুলো সব সময় এক উত্তর দেয় না। সাধারণ মানে সবার গড় ধরা। সতর্ক মানে খারাপ দিকটা ভেবে হিসাব করা, যাতে পরে ভুল না হয়।"
+ },
+ {
+  "id": 4,
+  "titles": [
+   "kept safe for the most vulnerable",
+   "reserve money for the most vulnerable"
+  ],
+  "en": "This keeps a part of the money only for the most vulnerable wards, so they are never left out. It is fairer, but you lose a little total cooling.",
+  "bn": "এই টাকাটা আলাদা করে রাখা হয় সবচেয়ে কষ্টে থাকা এলাকার জন্য। তাহলে তাদের কেউ ভুলে যাবে না। তবে এতে মোট ঠান্ডা করার কাজ একটু কমে যায়।"
+ },
+ {
+  "id": 5,
+  "titles": [
+   "check todays conditions",
+   "air temperature",
+   "humidity",
+   "heat index"
+  ],
+  "en": "These numbers show how hot it is in Kolkata right now. The heat index mixes heat and humidity, so it tells how the body really feels, and it decides the alert.",
+  "bn": "এখানে কলকাতায় এখন কত গরম, তা দেখানো আছে। গরমের সঙ্গে বাতাসের ভেজা ভাবও আছে। দুটো মিলিয়ে শরীরে আসলে কেমন লাগছে, সেটাই গরমের অনুভূতি। এর ওপর ভিত্তি করেই সতর্কবার্তা আসে।"
+ },
+ {
+  "id": 6,
+  "titles": [
+   "choose what can be built"
+  ],
+  "en": "Pick which kinds of work the plan may use, like cool roofs, trees, water points or cool rooms. Untick one, and it will not be chosen.",
+  "bn": "এখানে বেছে নিন, প্ল্যানে কী কী কাজ থাকতে পারবে। যেমন ঠান্ডা ছাদ, গাছ, জলের জায়গা, ঠান্ডা ঘর। কোনোটার টিক তুলে দিলে সেটা আর ধরা হবে না।"
+ },
+ {
+  "id": 7,
+  "titles": [
+   "decide what vulnerable means"
+  ],
+  "en": "These sliders decide who we worry about most: old people, small children, poor housing. Change them to match what you care about.",
+  "bn": "এই স্লাইডারগুলো ঠিক করে, কাদের কথা আমরা সবচেয়ে বেশি ভাবব। যেমন বুড়ো মানুষ, ছোট বাচ্চা, বা যাদের বাড়ি খুব খারাপ। আপনার যা জরুরি মনে হয়, সেই মতো বদলান।"
+ },
+ {
+  "id": 8,
+  "titles": [
+   "run the optimizer"
+  ],
+  "en": "When you are happy with the settings, press this button. The tool picks the best wards and shows the plan.",
+  "bn": "সব ঠিক হলে এই বোতামে চাপ দিন। তখন প্ল্যান তৈরি হয়ে যাবে, আর কোন এলাকাগুলো টাকা পাবে তা দেখা যাবে।"
+ },
+ {
+  "id": 9,
+  "titles": [
+   "the map",
+   "read the map",
+   "switch the map layer"
+  ],
+  "en": "This is a map of Kolkata's wards. A darker colour means more of what you chose to show, like heat or people. After you run the plan, the chosen wards get a green outline.",
+  "bn": "এটা কলকাতার ম্যাপ। প্রতিটা আকার একটা ওয়ার্ড। রং যত গাঢ়, তত বেশি। যেমন বেশি গরম, বা বেশি মানুষ। প্ল্যান চালানোর পর যে ওয়ার্ডগুলো বাছা হয়, তাদের চারদিকে সবুজ দাগ পড়ে।"
+ },
+ {
+  "id": 10,
+  "titles": [
+   "click a highlighted ward"
+  ],
+  "en": "Click any ward, or its green number tag, and its full story opens in the inspector below the map.",
+  "bn": "যেকোনো ওয়ার্ডে ক্লিক করুন, বা তার সবুজ নম্বরে। ম্যাপের নিচে সেই ওয়ার্ডের সব কথা খুলে যাবে।"
+ },
+ {
+  "id": 11,
+  "titles": [
+   "ward inspector",
+   "ward inspector name and numbers",
+   "why it got this allocation",
+   "recommended measures"
+  ],
+  "en": "This box tells the story of one ward: how hot it is, who lives there, why it got money or not, and what we suggest building.",
+  "bn": "এখানে একটা ওয়ার্ডের গল্প আছে। কত গরম, কারা থাকে, টাকা পেল কি না, আর পেলে কেন পেল। সঙ্গে বলা আছে, সেখানে কী কী করা উচিত।"
+ },
+ {
+  "id": 12,
+  "titles": [
+   "the plan"
+  ],
+  "en": "This is the answer. It shows which wards get money, for what, and how many people it helps. It changes every time you run the plan.",
+  "bn": "এটাই প্ল্যানের উত্তর। কোন ওয়ার্ড টাকা পাবে, কীসের জন্য, আর কতজন মানুষ উপকার পাবে, সব এখানে দেখা যায়। প্রতিবার প্ল্যান চালালে এটা বদলে যায়।"
+ },
+ {
+  "id": 13,
+  "titles": [
+   "the headline numbers"
+  ],
+  "en": "These four boxes sum up the plan: how much heat people are spared, how many more people get help nearby, and how much is spent on lasting and quick measures.",
+  "bn": "এই চারটে বাক্সে প্ল্যানের মূল কথা। মানুষ কতটা কম গরম সইবে, কতজন নতুন করে কাছে সাহায্য পাবে, আর কোন কাজে কত টাকা যাবে।"
+ },
+ {
+  "id": 14,
+  "titles": [
+   "heat people are spared"
+  ],
+  "en": "This adds up how much less heat people have to live in. A bigger number is better.",
+  "bn": "এখানে দেখা যায়, সবাই মিলে কতটা কম গরম সইতে হবে। সংখ্যা যত বড়, তত ভালো।"
+ },
+ {
+  "id": 15,
+  "titles": [
+   "people newly covered"
+  ],
+  "en": "These are old people, small children and poor families who now have water or a cool room within a short walk.",
+  "bn": "এরা বুড়ো মানুষ, ছোট বাচ্চা আর গরিব পরিবার। এখন থেকে অল্প হাঁটলেই এরা জল বা ঠান্ডা ঘর পাবে।"
+ },
+ {
+  "id": 16,
+  "titles": [
+   "spent on cooling"
+  ],
+  "en": "This money builds things that stay, like cool roofs and trees. You pay for it once.",
+  "bn": "এই টাকায় ঠান্ডা ছাদ আর গাছ লাগানো হয়। এগুলো একবার করলে অনেক বছর কাজ দেয়।"
+ },
+ {
+  "id": 17,
+  "titles": [
+   "spent on relief"
+  ],
+  "en": "This money helps only this summer, like water points and cool rooms, so it must be paid again every year.",
+  "bn": "এই টাকা শুধু এই গ্রীষ্মের জন্য। জলের জায়গা আর ঠান্ডা ঘরের মতো সাহায্য, তাই প্রতি বছর আবার টাকা দিতে হয়।"
+ },
+ {
+  "id": 18,
+  "titles": [
+   "structural cooling picks"
+  ],
+  "en": "These are the wards chosen for lasting cooling, with what to build and what it costs. Click one to see why.",
+  "bn": "এই ওয়ার্ডগুলো অনেক দিনের ঠান্ডা করার কাজের জন্য বাছা হয়েছে। কী করা হবে আর কত খরচ, তাও লেখা আছে। কেন বাছা হলো দেখতে একটায় ক্লিক করুন।"
+ },
+ {
+  "id": 19,
+  "titles": [
+   "seasonal relief picks"
+  ],
+  "en": "These wards get quick help for this summer, like water points or cool rooms, because many vulnerable people there are far from any help.",
+  "bn": "এই ওয়ার্ডগুলোতে এই গ্রীষ্মেই তাড়াতাড়ি সাহায্য যাবে, যেমন জল বা ঠান্ডা ঘর। কারণ এখানে অনেক কষ্টে থাকা মানুষ, আর সাহায্য অনেক দূরে।"
+ },
+ {
+  "id": 20,
+  "titles": [
+   "who benefits"
+  ],
+  "en": "This checks whether the help reaches the people who need it most, and not only the richer or hotter places.",
+  "bn": "এখানে দেখা হয়, সাহায্য সত্যিই যাদের বেশি দরকার তাদের কাছে যাচ্ছে কি না। শুধু বড়লোক এলাকায় বা বেশি গরম জায়গায় নয়।"
+ },
+ {
+  "id": 21,
+  "titles": [
+   "hospital heat flags"
+  ],
+  "en": "These flags mark hospitals in wards that may see more heat illness, so staff can get ready.",
+  "bn": "এই চিহ্নগুলো হাসপাতাল দেখায়, যেখানে গরমের কারণে অসুস্থ রোগী বাড়তে পারে। তাই ডাক্তার আর কর্মীরা আগে থেকে তৈরি থাকতে পারেন।"
+ },
+ {
+  "id": 22,
+  "titles": [
+   "is our way better",
+   "benchmarks"
+  ],
+  "en": "We spend the same money in five simple ways, like cooling the hottest ward first, and compare. This shows whether our way really does better.",
+  "bn": "আমরা একই টাকা পাঁচটা সহজ উপায়ে খরচ করে দেখি। যেমন সবচেয়ে গরম ওয়ার্ডে আগে। তারপর সবগুলো পাশাপাশি রাখি। এতে বোঝা যায়, আমাদের উপায় সত্যিই ভালো কি না।"
+ },
+ {
+  "id": 23,
+  "titles": [
+   "what fairness costs",
+   "impact of reserving money"
+  ],
+  "en": "If we keep more money safe for the poorest wards, total cooling can drop a little. This curve shows how much we lose for how much fairness we gain.",
+  "bn": "গরিব এলাকার জন্য বেশি টাকা আলাদা রাখলে, মোট ঠান্ডা করা একটু কমে যেতে পারে। এই রেখা দেখায়, বেশি সমানভাবে ভাগ করলে ঠিক কতটা হারাতে হয়।"
+ },
+ {
+  "id": 24,
+  "titles": [
+   "where the numbers come from",
+   "check the model"
+  ],
+  "en": "This explains what data we used and what we had to guess. Please read it before trusting any number.",
+  "bn": "এখানে লেখা আছে, আমরা কোন তথ্য নিয়েছি আর কোথায় আন্দাজ করেছি। কোনো সংখ্যা বিশ্বাস করার আগে এটা একবার পড়ে নিন।"
+ },
+ {
+  "id": 25,
+  "titles": [
+   "ask the tree why",
+   "it explains the plans choices",
+   "questions to try"
+  ],
+  "en": "The little tree is a helper. Ask it why the plan chose a ward or a split, and it answers using the same numbers you see on screen.",
+  "bn": "ছোট গাছটা আপনার সাহায্যকারী। জিজ্ঞেস করুন, প্ল্যান কেন এই ওয়ার্ড বা এই ভাগ বেছেছে। পর্দায় যে সংখ্যা দেখছেন, সেই সংখ্যা দিয়েই সে উত্তর দেবে।"
+ },
+ {
+  "id": 26,
+  "titles": [
+   "save and switch language"
+  ],
+  "en": "Save keeps this plan for later, and the language button switches the whole page between English and Bangla.",
+  "bn": "সেভ চাপলে এই প্ল্যান পরে দেখার জন্য রাখা থাকে। আর ভাষার বোতামে পুরো পাতা ইংরেজি থেকে বাংলায়, বা বাংলা থেকে ইংরেজিতে যায়।"
+ },
+ {
+  "id": 27,
+  "titles": [
+   "you are ready"
+  ],
+  "en": "That is everything. Check the weather, set the budget and split, run the plan, then click a ward to see why.",
+  "bn": "ব্যস, এই তো সব। আগে আবহাওয়া দেখুন, তারপর টাকা আর ভাগ ঠিক করুন, প্ল্যান চালান। শেষে একটা ওয়ার্ডে ক্লিক করে দেখুন, কেন সেটা বাছা হলো।"
+ },
+ {
+  "id": 28,
+  "titles": [
+   "hottest is not always neediest"
+  ],
+  "en": "The hottest place is not always the one in most need. A hot ward of well-off families can cope better than a cooler ward of poor ones.",
+  "bn": "সবচেয়ে গরম জায়গাই যে সবচেয়ে বেশি কষ্টে আছে, তা নয়। ধনী পরিবারের গরম এলাকার চেয়ে, গরিব পরিবারের কম গরম এলাকায় কষ্ট বেশি হতে পারে।"
+ },
+ {
+  "id": 29,
+  "titles": [
+   "two pots of money"
+  ],
+  "en": "There are two pots of money. One builds lasting things like roofs and trees. The other gives quick help for this summer.",
+  "bn": "টাকার দুটো ভাগ আছে। একটা দিয়ে ছাদ আর গাছের মতো অনেক দিনের কাজ হয়। আরেকটা দিয়ে এই গ্রীষ্মেই তাড়াতাড়ি সাহায্য দেওয়া হয়।"
+ },
+ {
+  "id": 30,
+  "titles": [
+   "check our working"
+  ],
+  "en": "This is where we are honest about what we do not know, so you can check our working.",
+  "bn": "এখানে আমরা সোজাসুজি বলি, কোন কোন জিনিস আমরা জানি না। যাতে আপনি আমাদের হিসাব নিজে যাচাই করতে পারেন।"
+ }
+]

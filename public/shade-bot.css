@@ -1,0 +1,69 @@
+/* S.H.A.D.E. tree explainer: uses the same tokens as style.css (--green, --tint, --head ...) */
+
+/* ───────── the tree button ───────── */
+.sb-tree { position: fixed; right: 20px; bottom: 46px; z-index: 920; width: 54px; height: 72px; padding: 0; border: 0; background: none; cursor: pointer;
+  transition: width .9s cubic-bezier(.2,.9,.25,1.1), height .9s cubic-bezier(.2,.9,.25,1.1); }
+.sb-tree.is-big { width: 120px; height: 160px; }
+.sb-tree:focus-visible { outline: 2px solid var(--green); outline-offset: 3px; border-radius: 10px; }
+.sb-svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.sb-ground { fill: var(--tint-2); }
+.sb-trunk { fill: var(--green-ink); transform-box: fill-box; transform-origin: 50% 100%; transform: scaleY(.55); transition: transform .8s cubic-bezier(.2,.9,.3,1.1); }
+.sb-branch { fill: none; stroke: var(--green-ink); stroke-width: 3.2; stroke-linecap: round; stroke-dasharray: 60; stroke-dashoffset: 60; transition: stroke-dashoffset .6s ease .45s; }
+.cr { transform-box: fill-box; transform-origin: 50% 50%; transform: scale(0); transition: transform .7s cubic-bezier(.3,1.4,.5,1); }
+.c0 { fill: var(--green); transform: scale(.62); }
+.c1 { fill: var(--green-2); }
+.c2 { fill: var(--leaf); }
+.c3 { fill: var(--leaf); opacity: .85; }
+.c4 { fill: var(--mist); }
+.sb-tree.is-big .sb-trunk { transform: scaleY(1); }
+.sb-tree.is-big .sb-branch { stroke-dashoffset: 0; }
+.sb-tree.is-big .cr { transform: scale(1); }
+.sb-tree.is-big .c1 { transition-delay: .25s; } .sb-tree.is-big .c2 { transition-delay: .4s; }
+.sb-tree.is-big .c3 { transition-delay: .55s; } .sb-tree.is-big .c4 { transition-delay: .7s; }
+.sb-tree:not(.is-big):hover .c0 { transform: scale(.72); }
+
+.sb-tip { position: absolute; right: 62px; bottom: 26px; white-space: nowrap; padding: 6px 12px; background: #fff; color: var(--green-ink);
+  border: 1px solid var(--green); border-radius: 999px; font: 700 15px var(--head); box-shadow: 0 4px 14px rgba(7,48,31,.15); }
+.sb-tree.is-big .sb-tip, .sb-tip[hidden] { display: none; }
+.sb-tree.sb-new::before { content: ""; position: absolute; left: 50%; bottom: 6px; width: 48px; height: 48px; margin-left: -24px; border-radius: 50%;
+  border: 2px solid var(--green); animation: sb-ring 1.8s ease-out 3; pointer-events: none; }
+@keyframes sb-ring { from { transform: scale(.6); opacity: .8; } to { transform: scale(1.8); opacity: 0; } }
+
+/* ───────── chat window ───────── */
+.sb-panel { position: fixed; right: 150px; bottom: 46px; z-index: 915; width: min(410px, calc(100vw - 170px)); height: min(560px, calc(100vh - 100px));
+  box-shadow: 0 18px 50px rgba(7,48,31,.3); border: 2px solid var(--green);
+  transform-origin: 100% 100%; transform: scale(.85) translateY(12px); opacity: 0; visibility: hidden; transition: transform .3s ease, opacity .3s ease, visibility .3s; }
+.sb-panel.open { transform: none; opacity: 1; visibility: visible; transition-delay: .55s; }
+.sb-body { display: flex; flex-direction: column; gap: 8px; min-height: 0; padding: 12px 14px 12px; }
+.sb-log { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 4px; }
+.sb-msg { max-width: 92%; padding: 9px 12px; border-radius: 10px; font-size: 13.5px; line-height: 1.55; overflow-wrap: anywhere; }
+.sb-msg p { margin-bottom: 6px; } .sb-msg p:last-child { margin-bottom: 0; }
+.sb-msg ul { margin: 2px 0 6px 18px; } .sb-msg li { margin-bottom: 3px; }
+.sb-msg strong { font-weight: 600; }
+.sb-msg.bot { align-self: flex-start; background: var(--tint); color: var(--text); border: 1px solid var(--line-soft); border-left: 3px solid var(--green); border-radius: 4px 10px 10px 10px; }
+.sb-msg.bot strong { color: var(--green-ink); }
+.sb-msg.me { align-self: flex-end; background: var(--green); color: #fff; border-radius: 10px 10px 4px 10px; }
+.sb-msg.err { background: #fdecea; color: #7a1f14; border-color: #e8b4ad; border-left-color: var(--heat); }
+.sb-src { margin-top: 7px; font-size: 11.5px; color: var(--faint); }
+.sb-dots span { display: inline-block; width: 6px; height: 6px; margin-right: 3px; border-radius: 50%; background: var(--leaf); animation: sb-blink 1s infinite; }
+.sb-dots span:nth-child(2) { animation-delay: .15s; } .sb-dots span:nth-child(3) { animation-delay: .3s; }
+@keyframes sb-blink { 0%, 80%, 100% { opacity: .25; } 40% { opacity: 1; } }
+.sb-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.sb-form { display: flex; gap: 6px; }
+.sb-form input[type="text"] { flex: 1; min-width: 0; }
+.sb-form .btn-primary { flex: none; }
+
+/* ───────── tutorial (own classes, same look as the main tour) ───────── */
+.sb-tour-spot { position: fixed; z-index: 4000; border-radius: 10px; pointer-events: none;
+  box-shadow: 0 0 0 3px #fff, 0 0 0 5px var(--green), 0 0 0 9999px rgba(7,48,31,.62); transition: all .25s ease; }
+.sb-tour-card { position: fixed; z-index: 4001; left: 50%; transform: translateX(-50%); width: min(520px, calc(100vw - 20px));
+  background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 0 0 14px; overflow: hidden; box-shadow: 0 14px 44px rgba(7,48,31,.35); }
+.sb-tour-card.at-bottom { bottom: 50px; } .sb-tour-card.at-top { top: 12px; }
+
+@media (max-width: 700px) {
+  .sb-panel { right: 10px; left: 10px; width: auto; bottom: 46px; }
+  .sb-tree.is-big { visibility: hidden; }
+}
+.sb-panel .win-btns .sb-help { width: auto; padding: 0 10px; background: #e8a317; color: #2b1d00; font-weight: 700; font-size: 12.5px; border-radius: 999px; margin-right: 4px; }
+.sb-panel .win-btns .sb-help::after { content: " Tutorial"; }
+.sb-panel .win-btns .sb-help:hover { background: #f2b32e; color: #2b1d00; }

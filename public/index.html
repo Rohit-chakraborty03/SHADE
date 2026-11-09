@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>S.H.A.D.E. | Kolkata Heat Allocation & Distribution Equity Planner</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=Satisfy&family=Newsreader:opsz,wght@6..72,400;6..72,600&family=Public+Sans:wght@400;500;600&family=Yanone+Kaffeesatz:wght@500;600;700&display=swap" rel="stylesheet" />
+  <!-- MapLibre GL CSS & JS -->
+  <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
+  <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="human.css" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Ctext y=%27.9em%27 font-size=%2790%27%3E%F0%9F%8C%BB%3C/text%3E%3C/svg%3E">
+</head>
+<body>
+  <!-- TREE LIBRARY: drawn once, reused everywhere -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <defs>
+      <symbol id="t-round" viewBox="0 0 60 80">
+        <path d="M28.2 78 L29 46 H31 L31.8 78Z" fill="#5a4a3a"/>
+        <path d="M30 56 L21 44 M30 52 L40 41" stroke="#5a4a3a" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="30" cy="26" r="19" fill="currentColor"/>
+        <circle cx="15" cy="36" r="13" fill="currentColor"/>
+        <circle cx="45" cy="36" r="13" fill="currentColor"/>
+        <circle cx="30" cy="42" r="12" fill="currentColor"/>
+        <circle cx="24" cy="20" r="9" fill="#fff" opacity=".14"/>
+        <circle cx="40" cy="34" r="7" fill="#000" opacity=".07"/>
+      </symbol>
+      <symbol id="t-cone" viewBox="0 0 40 90">
+        <rect x="18.5" y="70" width="3" height="20" fill="#5a4a3a"/>
+        <path d="M20 2 C31 18 36 40 33 66 C28 72 12 72 7 66 C4 40 9 18 20 2Z" fill="currentColor"/>
+        <path d="M20 2 C14 20 11 42 13 66 C10 66 8 66 7 66 C4 40 9 18 20 2Z" fill="#fff" opacity=".13"/>
+      </symbol>
+      <symbol id="t-banyan" viewBox="0 0 120 90">
+        <path d="M54 88 L56 52 H66 L68 88Z" fill="#5a4a3a"/>
+        <path d="M30 58 V88 M40 56 V88 M82 56 V88 M92 58 V88" stroke="#5a4a3a" stroke-width="2" stroke-linecap="round"/>
+        <ellipse cx="60" cy="34" rx="52" ry="26" fill="currentColor"/>
+        <circle cx="26" cy="44" r="18" fill="currentColor"/>
+        <circle cx="94" cy="44" r="18" fill="currentColor"/>
+        <circle cx="42" cy="22" r="16" fill="currentColor"/>
+        <circle cx="78" cy="20" r="17" fill="currentColor"/>
+        <ellipse cx="46" cy="24" rx="20" ry="9" fill="#fff" opacity=".13"/>
+        <ellipse cx="80" cy="46" rx="22" ry="8" fill="#000" opacity=".07"/>
+      </symbol>
+      <symbol id="t-palm" viewBox="0 0 50 90">
+        <path d="M24 88 C26 66 26 50 29 30" stroke="#5a4a3a" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+        <g fill="currentColor">
+          <path d="M29 30 C20 22 8 22 2 30 C12 26 20 28 29 30Z"/>
+          <path d="M29 30 C38 22 46 24 49 32 C40 28 34 29 29 30Z"/>
+          <path d="M29 30 C24 18 14 12 8 14 C18 16 24 22 29 30Z"/>
+          <path d="M29 30 C34 18 42 12 48 14 C40 16 34 22 29 30Z"/>
+          <path d="M29 30 C28 20 28 10 30 4 C32 12 32 22 29 30Z"/>
+        </g>
+      </symbol>
+      <symbol id="i-linkedin" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></symbol>
+      <symbol id="i-x" viewBox="0 0 24 24"><path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z"/></symbol>
+      <symbol id="i-github" viewBox="0 0 24 24"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></symbol>
+      <symbol id="t-sprout" viewBox="0 0 24 24">
+        <path d="M12 22 V11" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>
+        <path d="M12 12 C12 6 7 4 3 5 C3 10 7 13 12 12Z" fill="currentColor"/>
+        <path d="M12 10 C12 5 16 2 21 3 C21 8 17 11 12 10Z" fill="currentColor" opacity=".65"/>
+      </symbol>
+    </defs>
+  </svg>
+
+  <!-- LOADING SCREEN -->
+  <div id="loader" class="loader stage-on" role="status" aria-live="polite" aria-label="Loading">
+    <svg class="loader-wind" viewBox="0 0 1200 700" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <g transform="translate(0 95)"><path class="wind-line" style="animation-duration:9s;animation-delay:-0s;--o:0.55;stroke:#3f8f66;stroke-width:2.6" d="M0 0C80-16 160 16 250 0S380-12 430 4c20-14 44-4 36 9c-7 11-24 6-21-5"/></g>
+      <g transform="translate(0 170)"><path class="wind-line" style="animation-duration:11s;animation-delay:-2.5s;--o:0.4;stroke:#9cc5ab;stroke-width:2.2" d="M0 0C80-16 160 16 250 0S380-12 430 4c20-14 44-4 36 9c-7 11-24 6-21-5"/></g>
+      <g transform="translate(0 250)"><path class="wind-line" style="animation-duration:8s;animation-delay:-5s;--o:0.5;stroke:#3f8f66;stroke-width:2.4" d="M0 0C80-16 160 16 250 0S380-12 430 4c20-14 44-4 36 9c-7 11-24 6-21-5"/></g>
+      <g transform="translate(0 330)"><path class="wind-line" style="animation-duration:12s;animation-delay:-1s;--o:0.35;stroke:#9cc5ab;stroke-width:2.0" d="M0 0C80-16 160 16 250 0S380-12 430 4c20-14 44-4 36 9c-7 11-24 6-21-5"/></g>
+      <g transform="translate(0 410)"><path class="wind-line" style="animation-duration:9s;animation-delay:-6s;--o:0.5;stroke:#3f8f66;stroke-width:2.6" d="M0 0C80-16 160 16 250 0S380-12 430 4c20-14 44-4 36 9c-7 11-24 6-21-5"/></g>
+      <g transform="translate(0 490)"><path class="wind-line" style="animation-duration:10.5s;animation-delay:-3.5s;--o:0.4;stroke:#9cc5ab;stroke-width:2.2" d="M0 0C80-16 160 16 250 0S380-12 430 4c20-14 44-4 36 9c-7 11-24 6-21-5"/></g>
+      <g transform="translate(0 560)"><path class="wind-line" style="animation-duration:8.5s;animation-delay:-8s;--o:0.45;stroke:#3f8f66;stroke-width:2.2" d="M0 0C80-16 160 16 250 0S380-12 430 4c20-14 44-4 36 9c-7 11-24 6-21-5"/></g>
+      <g transform="translate(0 630)"><path class="wind-line" style="animation-duration:11.5s;animation-delay:-0.8s;--o:0.35;stroke:#9cc5ab;stroke-width:2.0" d="M0 0C80-16 160 16 250 0S380-12 430 4c20-14 44-4 36 9c-7 11-24 6-21-5"/></g>
+      <g transform="translate(0 40)"><path class="wind-line" style="animation-duration:10s;animation-delay:-7s;--o:0.35;stroke:#9cc5ab;stroke-width:2.0" d="M0 0C80-16 160 16 250 0S380-12 430 4c20-14 44-4 36 9c-7 11-24 6-21-5"/></g>
+    </svg>
+    <div class="loader-card">
+      <div class="loader-word" aria-hidden="true">SHADE</div>
+      <div class="loader-full" aria-label="System for Heat Allocation and Distribution Equity"><span class="ff en" lang="en">System for Heat Allocation &amp; Distribution Equity</span><span class="ff bn" lang="bn">তাপ বরাদ্দ ও বণ্টন সমতা ব্যবস্থা</span></div>
+      <div id="loader-pct" class="loader-pct">0%</div>
+      <div class="loader-bar"><span id="loader-bar-fill"></span></div>
+      <p id="loader-note" class="loader-note">Waking up the server<span class="ld">...</span></p>
+      <button id="loader-skip" class="loader-skip" type="button" hidden>Continue anyway</button>
+    </div>
+
+    <!-- INTRO STAGE: heat facts as cards, then an About S.H.A.D.E. card. "Skip intro" falls back to the plain loader above. -->
+    <div id="loader-stage" class="loader-stage">
+    <div class="ls-bg" aria-hidden="true">
+      <svg class="ls-tree" viewBox="0 0 60 80" style="--l:0.5;--h:150;color:#2f7a52"><use href="#t-round"/></svg>
+      <svg class="ls-tree" viewBox="0 0 60 80" style="--l:5;--h:105;color:#3f8f66"><use href="#t-cone"/></svg>
+      <svg class="ls-tree" viewBox="0 0 60 80" style="--l:10;--h:170;color:#2f7a52"><use href="#t-banyan"/></svg>
+      <svg class="ls-tree" viewBox="0 0 60 80" style="--l:17;--h:90;color:#6aa57e"><use href="#t-round"/></svg>
+      <svg class="ls-tree" viewBox="0 0 60 80" style="--l:27;--h:125;color:#3f8f66"><use href="#t-cone"/></svg>
+      <svg class="ls-tree" viewBox="0 0 60 80" style="--l:38;--h:80;color:#6aa57e"><use href="#t-round"/></svg>
+      <svg class="ls-tree" viewBox="0 0 60 80" style="--l:50;--h:110;color:#2f7a52"><use href="#t-cone"/></svg>
+      <svg class="ls-tree" viewBox="0 0 60 80" style="--l:61;--h:85;color:#6aa57e"><use href="#t-round"/></svg>
+      <svg class="ls-tree" viewBox="0 0 60 80" style="--l:70;--h:135;color:#3f8f66"><use href="#t-cone"/></svg>
+      <svg class="ls-tree" viewBox="0 0 60 80" style="--l:79;--h:95;color:#6aa57e"><use href="#t-round"/></svg>
+      <svg class="ls-tree" viewBox="0 0 60 80" style="--l:86;--h:175;color:#337a54"><use href="#t-round"/></svg>
+      <svg class="ls-tree" viewBox="0 0 60 80" style="--l:93;--h:115;color:#2f7a52"><use href="#t-banyan"/></svg>
+      <svg class="ls-tree" viewBox="0 0 60 80" style="--l:97;--h:150;color:#3f8f66"><use href="#t-cone"/></svg>
+      <div class="ls-ground"></div>
+      <i class="gl" style="--x:4.0;--r0:-45;--dur:12s;--dl:-0s;--c:#3f8f66"></i>
+      <i class="gl" style="--x:10.1;--r0:-8;--dur:13s;--dl:-5s;--c:#b9a24a"></i>
+      <i class="gl" style="--x:16.2;--r0:29;--dur:14s;--dl:-10s;--c:#6aa57e"></i>
+      <i class="gl" style="--x:22.3;--r0:-24;--dur:15s;--dl:-1s;--c:#c2793a"></i>
+      <i class="gl" style="--x:28.4;--r0:13;--dur:16s;--dl:-6s;--c:#3f8f66"></i>
+      <i class="gl" style="--x:34.5;--r0:-40;--dur:17s;--dl:-11s;--c:#b9a24a"></i>
+      <i class="gl" style="--x:40.6;--r0:-3;--dur:12s;--dl:-2s;--c:#6aa57e"></i>
+      <i class="gl" style="--x:46.7;--r0:34;--dur:13s;--dl:-7s;--c:#c2793a"></i>
+      <i class="gl" style="--x:52.8;--r0:-19;--dur:14s;--dl:-12s;--c:#3f8f66"></i>
+      <i class="gl" style="--x:58.9;--r0:18;--dur:15s;--dl:-3s;--c:#b9a24a"></i>
+      <i class="gl" style="--x:65.0;--r0:-35;--dur:16s;--dl:-8s;--c:#6aa57e"></i>
+      <i class="gl" style="--x:71.1;--r0:2;--dur:17s;--dl:-13s;--c:#c2793a"></i>
+      <i class="gl" style="--x:77.2;--r0:39;--dur:12s;--dl:-4s;--c:#3f8f66"></i>
+      <i class="gl" style="--x:83.3;--r0:-14;--dur:13s;--dl:-9s;--c:#b9a24a"></i>
+      <i class="gl" style="--x:89.4;--r0:23;--dur:14s;--dl:-0s;--c:#6aa57e"></i>
+      <i class="gl" style="--x:95.5;--r0:-30;--dur:15s;--dl:-5s;--c:#c2793a"></i>
+    </div>
+      <div class="ls-main">
+        <div class="ls-head">
+          <span class="ls-kicker">while the map loads&hellip;</span>
+          <h2>Heat kills <span class="ls-u">quietly</span> in India.</h2>
+          <p>And many of these deaths never make it into the official count.</p>
+        </div>
+        <div class="ls-cards" id="ls-cards"></div>
+        <div class="ls-counter" id="ls-counter">
+          <div class="lc-left">
+            <span class="lc-label">people officially recorded dying of heat in India, 2015&ndash;2023</span>
+            <span class="lc-num" id="lc-num">0</span>
+            <span class="lc-fine">Official NCRB count: 8,171 (2015&ndash;22) plus about 806 (2023), the latest published. Experts say the real toll is higher.</span>
+          </div>
+          <div class="lc-field" id="lc-field" aria-hidden="true"></div>
+          <div class="lc-right"><strong>That is one person every 9 hours.</strong><span>each figure &asymp; 50 people</span></div>
+        </div>
+      </div>
+      <div class="ls-veil"></div>
+      <div class="ls-intro" id="ls-intro" role="dialog" aria-label="About S.H.A.D.E.">
+      <div class="ls-hero">
+        <div class="ls-scene" aria-hidden="true">
+          <svg class="ls-tree" viewBox="0 0 60 80" style="--l:2;--h:78;color:#2f7a52"><use href="#t-round"/></svg>
+          <svg class="ls-tree" viewBox="0 0 60 80" style="--l:12;--h:56;color:#3f8f66"><use href="#t-cone"/></svg>
+          <svg class="ls-tree" viewBox="0 0 60 80" style="--l:22;--h:42;color:#6aa57e"><use href="#t-round"/></svg>
+          <svg class="ls-tree" viewBox="0 0 60 80" style="--l:74;--h:44;color:#6aa57e"><use href="#t-cone"/></svg>
+          <svg class="ls-tree" viewBox="0 0 60 80" style="--l:83;--h:60;color:#2f7a52"><use href="#t-banyan"/></svg>
+          <svg class="ls-tree" viewBox="0 0 60 80" style="--l:90;--h:80;color:#337a54"><use href="#t-round"/></svg>
+          <div class="ls-ground"></div>
+          <i class="gl" style="--x:7;--r0:-20;--dur:13s;--dl:0s;--c:#3f8f66"></i>
+          <i class="gl" style="--x:17;--r0:30;--dur:16s;--dl:-4s;--c:#b9a24a"></i>
+          <i class="gl" style="--x:27;--r0:-45;--dur:14s;--dl:-8s;--c:#6aa57e"></i>
+          <i class="gl" style="--x:38;--r0:15;--dur:17s;--dl:-2s;--c:#c2793a"></i>
+          <i class="gl" style="--x:49;--r0:-10;--dur:12.5s;--dl:-11s;--c:#3f8f66"></i>
+          <i class="gl" style="--x:60;--r0:40;--dur:15.5s;--dl:-6s;--c:#b9a24a"></i>
+          <i class="gl" style="--x:70;--r0:-30;--dur:13.5s;--dl:-9s;--c:#6aa57e"></i>
+          <i class="gl" style="--x:80;--r0:20;--dur:16.5s;--dl:-1s;--c:#3f8f66"></i>
+          <i class="gl" style="--x:92;--r0:-15;--dur:14.5s;--dl:-13s;--c:#c2793a"></i>
+          <i class="gl" style="--x:55;--r0:60;--dur:18s;--dl:-15s;--c:#6aa57e"></i>
+        </div>
+        <div class="ls-word" aria-hidden="true">SHADE</div>
+        <div class="ls-full">System for Heat Allocation &amp; Distribution Equity</div>
+      </div>
+        <p>Kolkata&rsquo;s summers are getting harsher, and the heat does not hurt everyone the same. An old person living alone, a small child in a tin-roof room, a family with no fan: they feel it first, and they feel it most.</p>
+        <p><strong>S.H.A.D.E.</strong> is a <b>prototype of a concept</b>. It explores where a small heat budget should go, so it reaches these people first and not just the reddest dots on a map.</p>
+        <p class="ls-only"><span class="ls-pin" aria-hidden="true">&#128205;</span> Made <b>only for Kolkata</b> for now. Every number is a model <b>estimate</b>, not a measured result. Other cities need their own ward data.</p>
+        <div class="ls-steps">
+          <div><b>1</b><strong>Set a budget</strong><span>Choose how much to spend and how to split it.</span></div>
+          <div><b>2</b><strong>It picks the wards</strong><span>Cool roofs and trees for the long term. Water points and cool rooms for this summer.</span></div>
+          <div><b>3</b><strong>See why</strong><span>Every pick is explained and tested against 50 models.</span></div>
+        </div>
+        <button id="ls-enter" class="btn-primary ls-enter" type="button" disabled>Getting ready&hellip; 0%</button>
+      </div>
+      <div class="ls-bottom">
+        <div class="ls-bar"><span id="ls-fill"></span></div>
+        <span id="ls-pct" class="ls-pct">0%</span>
+        <button id="ls-skip" class="loader-skip ls-skip" type="button">Skip intro</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MASTHEAD -->
+  <header class="topbar">
+    <div class="top-side">
+      <button id="btn-lang" class="btn-secondary">বাংলা / English</button>
+      <button id="btn-tour" class="btn-secondary btn-tour" type="button" aria-label="Open the tutorial"><span class="tour-q" aria-hidden="true">?</span>Take the tour</button>
+    </div>
+    
+    <!-- RESTORED ORIGINAL LOGO BLOCK -->
+    <div class="brand">
+      <span class="badge-logo">
+        <svg class="logo-tree" viewBox="0 0 60 80" aria-hidden="true" data-forest="logo" data-type="round"></svg>
+        <span class="logo-word">SHADE</span>
+        <svg class="logo-tree" viewBox="0 0 60 80" aria-hidden="true" data-forest="logo" data-type="cone"></svg>
+      </span>
+      <h1 id="ui-title">System for Heat Allocation & Distribution Equity — Kolkata</h1>
+    </div>
+
+    <div class="top-side top-actions">
+      <button id="btn-report" class="btn-secondary" type="button" title="Download a formal PDF report of this plan and the selected ward">Download PDF report</button>
+      <button id="btn-save-scenario" class="btn-primary">Save this scenario</button>
+      <span id="clock" class="clock">--:--</span>
+    </div>
+  </header>
+
+  <!-- WEATHER + TODAY'S SUGGESTION -->
+  <div class="weather-wrap">
+  <section class="weather-banner">
+    <div class="weather-info">
+      <div id="wx-stats" class="wx-stats" hidden></div>
+      <span id="weather-status">Loading Kolkata weather...</span>
+      <!-- app.js still writes into this; human.js shows it big in the note below -->
+      <span id="weather-split-pill" class="pill">Suggested Split: 70/30</span>
+    </div>
+  </section>
+
+  <section class="split-feature" id="split-feature" aria-live="polite">
+    <div class="sf-text">
+      <span class="sf-kicker">Our suggestion for today</span>
+      <div class="sf-nums">
+        <span class="sf-n sf-cool"><b id="sf-cool">70</b><u>%</u><i>for cooling</i></span>
+        <span class="sf-and">and</span>
+        <span class="sf-n sf-rel"><b id="sf-rel">30</b><u>%</u><i>for relief</i></span>
+      </div>
+      <p id="sf-why" class="sf-why">Reading today&rsquo;s weather&hellip;</p>
+    </div>
+    <div class="sf-mid">
+      <div class="sf-bar" aria-hidden="true"><span id="sf-bar-cool"></span></div>
+      <div class="sf-bar-labels"><span>Cooling: roofs &amp; trees that last</span><span>Relief: help for this summer</span></div>
+      <p id="sf-yours" class="sf-yours"></p>
+    </div>
+    <div class="sf-act">
+      <button id="btn-apply-suggested" class="btn-small sf-apply">Use this split</button>
+      <label class="toggle-label sf-sim">
+        <input type="checkbox" id="chk-sim-heatwave" />
+        <span>What if a severe heatwave hits? (43.8&deg;C heat index)</span>
+      </label>
+    </div>
+  </section>
+  </div>
+
+  <!-- ABOUT -->
+  <section class="win readme-win" id="win-readme">
+    <div class="titlebar"><span class="win-title">About S.H.A.D.E.</span><span class="win-btns"><button type="button" data-act="min" aria-label="Collapse">–</button></span></div>
+    <div class="win-body">
+      <div class="hero-top">
+        <p id="ui-subtitle" class="lede">A heat map only shows where it is hottest. But on the hottest night, the people in danger are the old, the very young, and families under tin roofs. S.H.A.D.E. is a prototype of a concept for making the money reach them first.</p>
+        <svg class="hero-trees" viewBox="0 0 360 150" aria-hidden="true" data-forest="hero">
+          <path class="ground" d="M0 140 Q90 133 180 140 T360 138 V150 H0Z" fill="#e3decb"/>
+        </svg>
+      </div>
+      
+      <p class="kolkata-only"><b>Prototype of a concept</b> &middot; Kolkata only for now &middot; every number is an estimate from a model, not a measured result</p>
+      <aside class="data-notice dockable" id="win-notice" aria-labelledby="dn-title">
+        <div class="dn-head"><strong id="dn-title">Read this before you trust the numbers</strong><button type="button" class="dock-min" aria-label="Minimise to the taskbar" title="Minimise to the taskbar">–</button></div>
+        <ul>
+          <li><b>Old ward map.</b> The ward outlines come from an older 141-ward KMC map. KMC&rsquo;s current map has 144 wards, so some ward numbers and borders may not match today&rsquo;s.</li>
+          <li><b>Old and modelled people data.</b> Population and age groups are WorldPop <em>estimates</em>, not a headcount. Census 2011 is more than a decade old, so it is not used for headcounts.</li>
+          <li><b>Assumed housing figures.</b> The slum share and poor-roof share of each ward are assumed values, not Census counts, because no ward-level table was available.</li>
+          <li><b>Heat, not health.</b> Temperatures are from satellite pictures of the ground surface. They are not how hot people feel, and the plan has not been checked against heat illness or hospital data.</li>
+          <li><b>Walking distance.</b> Measured along real streets (OpenStreetMap) only for water points. Other relief numbers are estimates.</li>
+        </ul>
+      </aside>
+      <!-- RESTORED ORIGINAL CARD STRUCTURE -->
+      <details class="fold why-fold">
+        <summary>Why this approach? Three short reasons</summary>
+      <div class="summary-strip">
+        <div class="summary-card">
+          <svg class="ico" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" fill="currentColor"/></svg>
+          <strong>Hottest is not always neediest</strong>
+          <span>If we only chase the hottest spot, we may cool an empty warehouse roof while a crowded bustee a few wards away bakes inside. So we also look at who lives there: old people, small kids, tin roofs.</span>
+        </div>
+        <div class="summary-card">
+          <svg class="ico" viewBox="0 0 24 24"><path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z" fill="currentColor"/></svg>
+          <strong>One budget, two pots</strong>
+          <span>One pot builds things that stay: <em>cool roofs and trees</em>. The other pot helps <em>this summer</em>: <em>water points, cool rooms, ORS at schools</em>. Move the slider and see what you give up.</span>
+        </div>
+        <div class="summary-card">
+          <svg class="ico" viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" fill="currentColor"/></svg>
+          <strong>Do not just trust us. Check.</strong>
+          <span>The numbers come from 50 models, not one, so you can see how sure we are. You can ask for the careful version too. Where we could measure it, walking distance follows real streets, not neat circles. Other relief numbers are marked as estimates.</span>
+        </div>
+      </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- MAIN WORKSPACE GRID -->
+  <main class="workspace">
+    <!-- LEFT: CONTROLS -->
+    <aside class="win controls-panel" id="win-controls">
+      <div class="titlebar"><span class="win-title">Budget</span><span class="win-btns"><button type="button" data-act="min" aria-label="Collapse">–</button></span></div>
+      <div class="win-body">
+        <h2 id="lbl-budget-controls">How much, and how to split it</h2>
+
+        <div class="control-group">
+          <label>Total heat budget: <strong id="val-budget">₹10.0 Crore</strong></label>
+          <input type="range" id="rng-budget" min="2" max="35" step="0.5" value="10" />
+          <div class="range-scale"><span>₹2 Cr</span><span>₹35 Cr</span></div>
+        </div>
+
+        <div class="control-group">
+          <label>Cooling / relief split: <strong id="val-split">70% Cooling / 30% Relief</strong></label>
+          <input type="range" id="rng-split" min="15" max="90" step="5" value="70" />
+          <div class="range-scale"><span>More relief</span><span>More cooling</span></div>
+        </div>
+
+        <div class="control-group">
+          <label>How careful should we be?</label>
+          <select id="sel-estimate-mode">
+            <option value="expected">Normal: the average of 50 models</option>
+            <option value="conservative">Careful: plan for the bad-luck case</option>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <label>Kept safe for the most vulnerable wards: <strong id="val-floor">0%</strong></label>
+          <input type="range" id="rng-floor" min="0" max="50" step="10" value="0" />
+          <div class="range-scale"><span>No guarantee</span><span>50% reserved</span></div>
+        </div>
+
+        <details class="fold adv-fold" id="adv-options">
+        <summary>More options: what we can build, what counts as &ldquo;vulnerable&rdquo;</summary>
+        <h3>What are we allowed to use?</h3>
+        <div class="checkbox-grid">
+          <label><input type="checkbox" class="chk-cool" value="cool_roof" checked /> Cool Roofs</label>
+          <label><input type="checkbox" class="chk-cool" value="trees" checked /> Urban Trees</label>
+          <label><input type="checkbox" class="chk-rel" value="water_point" checked /> Water Points (300m walk)</label>
+          <label><input type="checkbox" class="chk-rel" value="cool_room" checked /> Cool Rooms (1km walk)</label>
+          <label><input type="checkbox" class="chk-rel" value="mobile_unit" checked /> Mobile Relief Units</label>
+          <label><input type="checkbox" class="chk-rel" value="school_ors" checked /> School ORS Supply</label>
+        </div>
+
+        <hr />
+        <h3>What counts as &ldquo;vulnerable&rdquo;?</h3>
+        <p class="hint">Move a slider to say what matters more to you. 0 means ignore it, 1 is normal, 2 is double.</p>
+        <p class="assume-note"><b>Data note:</b> ward population is from Census 2011. The slum share and poor-roof share are assumptions, not Census counts, and age shares are modelled estimates. Treat results that lean on those sliders as illustrative.</p>
+        <div class="weight-sliders">
+          <label>Elderly (% 60+): <input type="range" id="w-60" min="0" max="2" step="0.5" value="1" /></label>
+          <label>Children (% &lt;6): <input type="range" id="w-u6" min="0" max="2" step="0.5" value="1" /></label>
+          <label>Slum Share <em class="asm">(assumed)</em>: <input type="range" id="w-slum" min="0" max="2" step="0.5" value="1" /></label>
+          <label>Building Density: <input type="range" id="w-bldg" min="0" max="2" step="0.5" value="1" /></label>
+          <label>Poor Roof (Tin/Asbestos) <em class="asm">(assumed)</em>: <input type="range" id="w-roof" min="0" max="2" step="0.5" value="1" /></label>
+        </div>
+
+        </details>
+
+        <button id="btn-run-plan" class="btn-run">Run the plan</button>
+      </div>
+    </aside>
+
+    <!-- CENTER: MAP + WARD INSPECTOR -->
+    <section class="center-column">
+      <div class="win" id="win-map">
+        <div class="titlebar">
+          <span class="win-title">Kolkata map</span>
+          <button type="button" id="btn-compare-heatmap" class="btn-compare-subtle" aria-pressed="false" data-label="Compare to Heatmap">
+            Compare to Heatmap
+          </button>
+          <span class="win-btns">
+            <button type="button" data-act="min" aria-label="Collapse">–</button>
+            <button type="button" data-act="max" aria-label="Maximize">□</button>
+          </span>
+        </div>
+        <div class="win-body">
+          <div class="map-toolbar">
+            <span>Show on the map:</span>
+            <button class="btn-layer active" data-layer="mean_temp_c">Surface heat (°C, est.)</button>
+            <button class="btn-layer" data-layer="vulnerability">Vulnerability Index</button>
+            <button class="btn-layer" data-layer="population">Population</button>
+            <button class="btn-layer" data-layer="night_heat_proxy">Hot nights (just to look at)</button>
+            <button type="button" id="btn-compare-toolbar" class="btn-compare-subtle" aria-pressed="false">
+              Compare to Heatmap
+            </button>
+          </div>
+
+          <!-- QUICK COMPARISON (estimates) -->
+          <div id="compare-proof-banner" class="compare-proof-banner" hidden>
+            <div class="cpb-top">
+              <div>
+                <span class="cpb-kicker">QUICK COMPARISON · ROUGH ESTIMATES · COOLING POOL <span id="cpb-budget">₹7.0 Cr</span></span>
+                <h3 class="cpb-headline">
+                  S.H.A.D.E. is estimated to reach <strong id="cpb-extra-vuln">~0</strong> <span id="cpb-verb">more</span> vulnerable people than funding the same number of hottest wards
+                </h3>
+              </div>
+              <button type="button" id="btn-close-compare" class="btn-secondary cpb-close">Exit Comparison</button>
+            </div>
+            <ul class="cpb-bullets" id="cpb-bullets">
+              <li>Comparing Hottest-First baseline vs. S.H.A.D.E. optimizer...</li>
+            </ul>
+          </div>
+
+          <div class="ward-picker" id="ward-picker">
+            <span>Ward:</span>
+            <button type="button" class="wp-arrow" id="wp-prev" aria-label="Previous ward">&#9664;</button>
+            <div class="wp-strip" id="wp-strip"></div>
+            <button type="button" class="wp-arrow" id="wp-next" aria-label="Next ward">&#9654;</button>
+          </div>
+
+          <!-- DUAL MAP CONTAINER (Single map normally; side-by-side when Compare is active) -->
+          <div id="map-Comparison-grid" class="map-stage">
+            <div id="heatmap-pane" class="map-pane heatmap-pane" hidden>
+              <div class="map-pane-header heatmap-header">
+                <span class="mph-badge">NAIVE HEATMAP BASELINE</span>
+                <strong>“A heat map would fund these wards”</strong>
+                <ul class="mph-bullets" id="hm-pane-stats"></ul>
+              </div>
+              <div id="map-heatmap" class="map-canvas"></div>
+            </div>
+
+            <div id="shade-pane" class="map-pane shade-pane">
+              <div id="shade-pane-header" class="map-pane-header shade-header" hidden>
+                <span class="mph-badge">S.H.A.D.E. EQUITY OPTIMIZER</span>
+                <strong>“S.H.A.D.E. funds these wards”</strong>
+                <ul class="mph-bullets" id="sh-pane-stats"></ul>
+              </div>
+              <div id="map" class="map-canvas"></div>
+            </div>
+          </div>
+
+          <div class="map-legend">
+            <span id="leg-heatmap-item" hidden><i class="dot hm-pick"></i> Heatmap-only pick (bright red)</span>
+            <span><i class="dot cool-pick"></i> Picked for cool roofs &amp; trees (bright green)</span>
+            <span><i class="dot relief-pick"></i> Picked for summer relief (blue dashes)</span>
+            <span><i class="dot sel-pick"></i> The ward you clicked</span>
+            <span><i class="dot hosp-pick"></i> Hospital to warn</span>
+            <span>Click any ward to read its story.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="win" id="ward-drawer">
+        <div class="titlebar"><span class="win-title">Ward inspector</span><span class="win-btns"><button type="button" data-act="min" aria-label="Collapse">–</button></span></div>
+        <div class="win-body">
+          <div id="ward-drawer-content">Click a ward on the map above. Its heat, who lives there, and what we would do for it will show up here.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT: RESULTS -->
+    <aside class="win results-panel" id="win-plan">
+      <div class="titlebar"><span class="win-title">Allocation plan</span><span class="win-btns"><button type="button" data-act="min" aria-label="Collapse">–</button></span></div>
+      <div class="win-body">
+        <h2>Where the money goes <span class="est-tag">estimates</span></h2>
+        <div class="kpi-grid">
+          <div class="kpi-box k1">
+            <span class="kpi-label">Estimated heat exposure avoided</span>
+            <strong id="kpi-pd">—</strong>
+            <small>from cool roofs &amp; trees</small>
+          </div>
+          <div class="kpi-box k2">
+            <span class="kpi-label">Estimated vulnerable people newly covered</span>
+            <strong id="kpi-rel">—</strong>
+            <small>within a short walk of help</small>
+          </div>
+          <div class="kpi-box k3">
+            <span class="kpi-label">Estimated cooling cost</span>
+            <strong id="kpi-cool-spent">—</strong>
+            <small>paid once</small>
+          </div>
+          <div class="kpi-box k4">
+            <span class="kpi-label">Estimated relief cost</span>
+            <strong id="kpi-rel-spent">—</strong>
+            <small>needed again every summer</small>
+          </div>
+        </div>
+
+        <h3>Built to last</h3>
+        <div id="list-cooling" class="pick-list"></div>
+
+        <h3>Help for this summer</h3>
+        <div id="list-relief" class="pick-list"></div>
+
+        <h3>Who actually gets helped?</h3>
+        <div id="equity-audit-box" class="audit-box"></div>
+
+        <h3>Hospitals to warn (costs nothing)</h3>
+        <ul id="list-hospitals" class="hospital-list"></ul>
+      </div>
+    </aside>
+  </main>
+
+  <!-- LOWER SECTION -->
+  <section class="analytics-grid">
+    <div class="win" id="win-bench">
+      <div class="titlebar"><span class="win-title">Benchmarks</span><span class="win-btns"><button type="button" data-act="min" aria-label="Collapse">–</button></span></div>
+      <div class="win-body crt">
+        <h3>Is our way really better?</h3>
+        <p class="hint">The same money, spent 5 different simple ways (modelled estimates). Look at &lsquo;Hottest First&rsquo;: it does badly when the hottest wards have fewer vulnerable people.</p>
+        <canvas id="chart-baselines" height="190"></canvas>
+      </div>
+    </div>
+
+    <div class="win" id="win-tradeoff">
+      <div class="titlebar"><span class="win-title">Equity trade-off</span><span class="win-btns"><button type="button" data-act="min" aria-label="Collapse">–</button></span></div>
+      <div class="win-body crt">
+        <h3>What does fairness cost?</h3>
+        <p class="hint">The more money we keep safe for the most vulnerable wards, the less total cooling we get. This curve shows by how much.</p>
+        <canvas id="chart-tradeoff" height="190"></canvas>
+      </div>
+    </div>
+
+    <div class="win" id="win-model">
+      <div class="titlebar"><span class="win-title">Methodology</span><span class="win-btns"><button type="button" data-act="min" aria-label="Collapse">–</button></span></div>
+      <div class="win-body">
+        <h3>Where the numbers come from</h3>
+        <p class="hint proto-note">This is a prototype of a concept. Every figure on this page is a modelled estimate, not a measured result, and has not been tested in a real city programme.</p>
+        <div id="model-card-box"></div>
+        <div id="coverage-gap-box" style="margin-top:12px;"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CREDITS -->
+  <section class="credit" id="credit">
+    <p class="credit-line">Designed by <strong>Rohit Chakravorty</strong></p>
+    <p class="credit-sub">S.H.A.D.E. &middot; System for Heat Allocation &amp; Distribution Equity &middot; made for Kolkata</p>
+    <div class="credit-links">
+      <a class="credit-link" href="https://www.linkedin.com/in/rohit-chakravorty-8b947438b/" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-linkedin"/></svg>LinkedIn</a>
+      <a class="credit-link" href="https://x.com/Rohitchakr27069" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-x"/></svg>X</a>
+      <a class="credit-link" href="https://github.com/Rohit-chakraborty03" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-github"/></svg>GitHub</a>
+    </div>
+  </section>
+
+  <!-- TREE LINE -->
+  <div class="treeline" aria-hidden="true">
+    <svg viewBox="0 0 1440 170" preserveAspectRatio="xMidYMax slice" data-forest="line">
+      <path class="ground" d="M0 158 Q360 148 720 156 T1440 154 V170 H0Z" fill="#1a4a38"/>
+    </svg>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <footer class="taskbar">
+    <span class="task-label">Jump to</span>
+    <div id="task-buttons" class="task-buttons"></div>
+    <button id="btn-intro" class="btn-intro" type="button" title="Watch the introduction again">▶ Watch intro</button>
+    
+    <div class="task-credit">
+      <span class="task-name">Rohit Chakravorty</span>
+      <a class="task-ico" href="https://www.linkedin.com/in/rohit-chakravorty-8b947438b/" target="_blank" rel="noopener noreferrer" aria-label="Rohit Chakravorty on LinkedIn" title="LinkedIn"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-linkedin"/></svg></a>
+      <a class="task-ico" href="https://x.com/Rohitchakr27069" target="_blank" rel="noopener noreferrer" aria-label="Rohit Chakravorty on X" title="X (Twitter)"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-x"/></svg></a>
+      <a class="task-ico" href="https://github.com/Rohit-chakraborty03" target="_blank" rel="noopener noreferrer" aria-label="Rohit Chakravorty on GitHub" title="GitHub"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-github"/></svg></a>
+    </div>
+  </footer>
+  <script src="shade-bot.js"></script>
+  <script src="app.js"></script>
+  <!-- cosmetic only: collapse/maximize panels, bottom nav, clock, loader. -->
+  <script src="desktop.js"></script>
+  <!-- warmer look + the little ? helpers + the big suggested split. Keep this last. -->
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script src="report.js"></script>
+  <script src="human.js"></script>
+  <script src="voice.js"></script>
+  <script src="dock.js"></script>
+  <script src="jungle.js"></script>
+</body>
+</html>
