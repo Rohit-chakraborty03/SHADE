@@ -20,7 +20,7 @@
         seen.plan = JSON.parse(init.body);
       } else if (/\/api\/weather/.test(url)) {
         var u = new URL(url, location.href);
-        seen.weather = { simulate: u.searchParams.get('simulate') === 'true', alert: u.searchParams.get('alert') };
+        seen.weather = { simulate: u.searchParams.get('simulate') === 'true', alert: u.searchParams.get('alert'), loc: u.searchParams.get('loc') };
       }
     } catch (e) { /* never break the site */ }
     return realFetch(input, init);

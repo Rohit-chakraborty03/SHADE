@@ -13,7 +13,8 @@
 
   var NS = 'http://www.w3.org/2000/svg';
   var VBW = 1440, VBH = 210, VBY = -40, GY = 158;           // taller view so the sun has room above the trees
-  var CFG = { walkSpeed: 380, swings: 2, cluster: 58, regrowMs: 3200, restMs: 2600 };
+  var CFG = { walkSpeed: 520, swings: 2, cluster: 58, regrowMs: 2400, restMs: 2600, quickRestMs: 800, startGapMs: 250 };
+  var firstRun = true;                                      // only the very first cycle shows the long calm jungle
   svg.setAttribute('viewBox', '0 ' + VBY + ' ' + VBW + ' ' + VBH);
 
   /* ───────── tiny helpers ───────── */
@@ -246,7 +247,7 @@
     var inView = trees.filter(function (t) { return t.x > V.x0 - 70 && t.x < V.x1 + 70; });
     trees.forEach(function (t) { if (inView.indexOf(t) < 0) vanish(t); });
     // the jungle stands for a moment, then he walks in from the left
-    phase = 'jungle'; await wait(CFG.restMs);
+    phase = 'jungle'; await wait(firstRun ? CFG.restMs : CFG.startGapMs); firstRun = false;
     phase = 'cutting';
     man.x = V.x0 - 50; pose(); gMan.setAttribute('opacity', '1');
     var alive = inView.slice(), falls = [];
@@ -309,11 +310,11 @@
       sprout.setAttribute('opacity', String(Math.min(1, p * 4)));
       sprout.setAttribute('transform', 'translate(' + px.toFixed(1) + ' ' + GY + ') scale(' + s2.toFixed(3) + ')');
     });
-    await wait(500);
+    await wait(250);
 
     // sun sets, the jungle grows back
     phase = 'regrow';
-    var regrows = inView.map(function (t, i) { return regrow(t, 500 + (i / inView.length) * (CFG.regrowMs - 900)); });
+    var regrows = inView.map(function (t, i) { return regrow(t, 150 + (i / inView.length) * (CFG.regrowMs - 550)); });
     pending.forEach(function (t) { t.wrap.style.visibility = ''; t.wrap.style.opacity = '1'; t.wrap.removeAttribute('transform'); if (t.stump) { t.stump.remove(); t.stump = null; } t.gone = false; });
     await tween(CFG.regrowMs, function (p) {
       var q = easeInOut(p);
@@ -323,8 +324,8 @@
     await Promise.all(regrows);
     setHeat(0); setSun(0, 230, 0);
     phase = 'jungle';
-    await wait(CFG.restMs);
-    await tween(700, function (p) { sprout.setAttribute('opacity', String(1 - p)); });
+    await wait(CFG.quickRestMs);
+    await tween(450, function (p) { sprout.setAttribute('opacity', String(1 - p)); });
   }
 
   window.shadeJungle = { phase: function () { return phase; } };

@@ -39,17 +39,56 @@ app.use('/api/plan', apiLimiter);
 app.use('/api/chat', apiLimiter);
 app.use('/api/explain', apiLimiter);
 
-// Weather Cache (15 minutes)
-let weatherCache = {
-  timestamp: 0,
-  data: null
+// ───────── Live weather (Open-Meteo), one cached reading per location ─────────
+// Open-Meteo values are model grid cells (about 1 to 10 km), so places close together can read the same.
+const DEFAULT_WEATHER_LOCATION = 'saltlake-sector-v';
+const WEATHER_LOCATIONS = {
+  'saltlake-sector-v': { name: 'Salt Lake Sector V', lat: 22.5736, lon: 88.4338 },
+  'newtown':           { name: 'New Town',           lat: 22.5867, lon: 88.4798 },
+  'dumdum-airport':    { name: 'Dum Dum (Airport)',  lat: 22.6547, lon: 88.4467 },
+  'baranagar':         { name: 'Baranagar',          lat: 22.6440, lon: 88.3760 },
+  'central':           { name: 'Central Kolkata (Esplanade)', lat: 22.5645, lon: 88.3510 },
+  'howrah':            { name: 'Howrah',             lat: 22.5958, lon: 88.2636 },
+  'ballygunge':        { name: 'Ballygunge',         lat: 22.5266, lon: 88.3646 },
+  'kasba':             { name: 'Kasba',              lat: 22.5170, lon: 88.3930 },
+  'jadavpur':          { name: 'Jadavpur',           lat: 22.4989, lon: 88.3714 },
+  'tollygunge':        { name: 'Tollygunge',         lat: 22.4985, lon: 88.3453 },
+  'behala':            { name: 'Behala',             lat: 22.4982, lon: 88.3115 },
+  'garia':             { name: 'Garia',              lat: 22.4639, lon: 88.3871 }
 };
+const WEATHER_TTL_MS = 10 * 60 * 1000;      // reuse a reading for 10 minutes
+const WEATHER_RETRY_MS = 60 * 1000;         // after a failure wait a minute before asking again
+const weatherCache = new Map();             // locationId -> { timestamp, data }
+const weatherFailedAt = new Map();          // locationId -> time of the last failed request
 
-async function getKolkataWeather(simulateHeatwave = false, manualAlert = null) {
+async function fetchLiveWeather(loc) {
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}` +
+    `&current=temperature_2m,relative_humidity_2m,apparent_temperature&timezone=Asia%2FKolkata`;
+  const resp = await fetch(url, { signal: AbortSignal.timeout(8000), headers: { 'User-Agent': 'SHADE-Kolkata/1.0' } });
+  if (!resp.ok) throw new Error('Open-Meteo HTTP ' + resp.status);
+  const json = await resp.json();
+  const cur = json && json.current;
+  if (!cur || !Number.isFinite(cur.temperature_2m) || !Number.isFinite(cur.relative_humidity_2m) || !Number.isFinite(cur.apparent_temperature)) {
+    throw new Error('Open-Meteo returned no current reading');
+  }
+  return {
+    temp_c: cur.temperature_2m,
+    humidity_pct: cur.relative_humidity_2m,
+    heat_index_c: cur.apparent_temperature,
+    observed_at: cur.time || null
+  };
+}
+
+async function getKolkataWeather(simulateHeatwave = false, manualAlert = null, locationId = DEFAULT_WEATHER_LOCATION) {
+  const locKey = WEATHER_LOCATIONS[locationId] ? locationId : DEFAULT_WEATHER_LOCATION;
+  const loc = WEATHER_LOCATIONS[locKey];
+  const location = { id: locKey, name: loc.name };
+
   if (simulateHeatwave) {
     const split = suggestSplit(43.8, 3);
     return {
       source: "Simulated Severe Heatwave Mode",
+      location,
       temp_c: 41.2,
       humidity_pct: 58,
       heat_index_c: 43.8,
@@ -60,37 +99,53 @@ async function getKolkataWeather(simulateHeatwave = false, manualAlert = null) {
   }
 
   const now = Date.now();
-  if (!weatherCache.data || (now - weatherCache.timestamp > 15 * 60 * 1000)) {
+  let entry = weatherCache.get(locKey);
+  let stale = false;
+  const fresh = entry && (now - entry.timestamp) <= WEATHER_TTL_MS;
+  const coolingOff = (now - (weatherFailedAt.get(locKey) || 0)) < WEATHER_RETRY_MS;
+
+  if (!fresh && !coolingOff) {
     try {
-      const url = "https://api.open-meteo.com/v1/forecast?latitude=22.5726&longitude=88.3639&current=temperature_2m,relative_humidity_2m,apparent_temperature&timezone=auto";
-      const resp = await fetch(url);
-      const json = await resp.json();
-      weatherCache.data = {
-        temp_c: json.current.temperature_2m,
-        humidity_pct: json.current.relative_humidity_2m,
-        heat_index_c: json.current.apparent_temperature
-      };
-      weatherCache.timestamp = now;
+      entry = { timestamp: now, data: await fetchLiveWeather(loc) };
+      weatherCache.set(locKey, entry);
+      weatherFailedAt.delete(locKey);
     } catch (err) {
-      // Fallback if offline or Open-Meteo is unreachable
-      weatherCache.data = {
-        temp_c: 35.6,
-        humidity_pct: 64,
-        heat_index_c: 39.2
-      };
+      weatherFailedAt.set(locKey, now);
+      console.error(`[Weather] ${locKey}: ${err.message}`);
     }
   }
+  if (entry && (Date.now() - entry.timestamp) > WEATHER_TTL_MS) stale = true;
 
-  const base = weatherCache.data;
+  // No reading at all: say so honestly. Never show an invented temperature or a heat alert.
+  if (!entry) {
+    const alertLevel = manualAlert !== null ? Number(manualAlert) : 0;
+    return {
+      source: "Live weather unavailable",
+      location,
+      unavailable: true,
+      temp_c: null,
+      humidity_pct: null,
+      heat_index_c: null,
+      alert_level: alertLevel,
+      alert_name: "No live reading",
+      suggested_split: suggestSplit(0, alertLevel)
+    };
+  }
+
+  const base = entry.data;
   const alertLevel = manualAlert !== null ? Number(manualAlert) : (base.heat_index_c >= 41 ? 2 : base.heat_index_c >= 35 ? 1 : 0);
   const alertNames = ["Normal Conditions", "High Heat Watch", "IMD Heatwave Alert", "Severe Heatwave Alert"];
   const split = suggestSplit(base.heat_index_c, alertLevel);
+  const ageMin = Math.round((Date.now() - entry.timestamp) / 60000);
 
   return {
-    source: "Open-Meteo Live API (Kolkata)",
+    source: stale ? `Open-Meteo, last reading ${ageMin} min ago (${loc.name})` : `Open-Meteo Live (${loc.name})`,
+    location,
+    stale,
     temp_c: base.temp_c,
     humidity_pct: base.humidity_pct,
     heat_index_c: base.heat_index_c,
+    observed_at: base.observed_at,
     alert_level: alertLevel,
     alert_name: alertNames[alertLevel] || "Normal",
     suggested_split: split
@@ -239,7 +294,8 @@ app.get('/api/wards', (req, res) => {
 app.get('/api/weather', async (req, res) => {
   const sim = req.query.simulate === 'true';
   const alert = req.query.alert !== undefined ? req.query.alert : null;
-  const data = await getKolkataWeather(sim, alert);
+  const data = await getKolkataWeather(sim, alert, req.query.loc);
+  res.set('Cache-Control', 'no-store');
   res.json(data);
 });
 
@@ -784,7 +840,7 @@ app.post('/api/explain', async (req, res) => {
 
     const wq = req.body.weather_query && typeof req.body.weather_query === 'object' ? req.body.weather_query : {};
     const alert = wq.alert === undefined || wq.alert === null || wq.alert === '' ? null : wq.alert;
-    const weather = await getKolkataWeather(wq.simulate === true || wq.simulate === 'true', alert);
+    const weather = await getKolkataWeather(wq.simulate === true || wq.simulate === 'true', alert, wq.loc);
 
     const chunks = retrieveChunks(buildKnowledgeChunks(plan, weather, params, message), message);
     const context = chunks.map(c => `[${c.id}] ${c.title}\n${c.text}`).join('\n\n');

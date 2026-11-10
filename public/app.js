@@ -521,17 +521,45 @@ function getColorExpression(prop) {
   return ['interpolate', ['linear'], ['get', 'night_heat_proxy'], 0.35, '#1e3a8a', 0.65, '#f97316', 0.90, '#be123c'];
 }
 
-// 2. Fetch Live Weather & Suggested Split
+// 2. Fetch Live Weather & Suggested Split (for the location chosen in the dropdown)
+const WX_LOC_KEY = 'shade_weather_loc';
+let wxLocRestored = false;
+function selectedWeatherLoc() {
+  const sel = document.getElementById('sel-weather-loc');
+  if (!sel) return '';
+  if (!wxLocRestored) {            // remember the last choice on this device
+    wxLocRestored = true;
+    try {
+      const saved = localStorage.getItem(WX_LOC_KEY);
+      if (saved && [...sel.options].some(o => o.value === saved)) sel.value = saved;
+    } catch (e) {}
+  }
+  return sel.value;
+}
+
 async function fetchWeather() {
   const sim = document.getElementById('chk-sim-heatwave').checked;
-  const res = await fetch(`/api/weather?simulate=${sim}`);
-  const data = await res.json();
+  const status = document.getElementById('weather-status');
+  const loc = selectedWeatherLoc();
+  try {
+    const res = await fetch(`/api/weather?simulate=${sim}&loc=${encodeURIComponent(loc)}&_=${Date.now()}`, { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
 
-  latestSuggestedCooling = data.suggested_split.cooling;
-  document.getElementById('weather-status').innerHTML =
-    `<strong>${data.source}:</strong> ${data.temp_c}°C Air | ${data.humidity_pct}% Humidity | <strong>${data.heat_index_c}°C Heat Index</strong> (${data.alert_name})`;
-  document.getElementById('weather-split-pill').textContent =
-    `Suggested Split: ${data.suggested_split.cooling}% Cooling / ${data.suggested_split.relief}% Relief`;
+    latestSuggestedCooling = data.suggested_split.cooling;
+    if (data.unavailable) {
+      const name = (data.location && data.location.name) || 'this location';
+      status.textContent = `Live weather for ${name} is not available right now. Showing the normal-day suggestion. It will retry shortly.`;
+    } else {
+      const at = data.observed_at ? ` <small>as of ${String(data.observed_at).slice(11, 16)} IST</small>` : '';
+      status.innerHTML =
+        `<strong>${data.source}:</strong> ${data.temp_c}°C Air | ${data.humidity_pct}% Humidity | <strong>${data.heat_index_c}°C Heat Index</strong> (${data.alert_name})${at}`;
+    }
+    document.getElementById('weather-split-pill').textContent =
+      `Suggested Split: ${data.suggested_split.cooling}% Cooling / ${data.suggested_split.relief}% Relief`;
+  } catch (e) {
+    status.textContent = 'Could not load live weather. Check your connection, it will retry shortly.';
+  }
 }
 
 // 3. Run the S.H.A.D.E. Plan Engine
@@ -1034,6 +1062,25 @@ document.querySelectorAll('.weight-sliders input, #sel-estimate-mode').forEach(e
 document.getElementById('chk-sim-heatwave').addEventListener('change', async () => {
   await fetchWeather();
 });
+
+// Location dropdown for the live weather, plus automatic refresh so the reading never goes stale
+(function () {
+  const sel = document.getElementById('sel-weather-loc');
+  if (sel) {
+    selectedWeatherLoc();
+    sel.addEventListener('change', () => {
+      try { localStorage.setItem(WX_LOC_KEY, sel.value); } catch (e) {}
+      document.getElementById('weather-status').textContent = 'Loading weather...';
+      fetchWeather();
+    });
+  }
+  let lastWx = Date.now();
+  const tick = () => { lastWx = Date.now(); fetchWeather(); };
+  setInterval(() => { if (!document.hidden) tick(); }, 10 * 60 * 1000);
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && Date.now() - lastWx > 5 * 60 * 1000) tick();
+  });
+})();
 
 document.getElementById('btn-apply-suggested').addEventListener('click', async () => {
   document.getElementById('rng-split').value = latestSuggestedCooling;

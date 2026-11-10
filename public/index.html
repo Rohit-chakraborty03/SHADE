@@ -211,8 +211,23 @@
   <div class="weather-wrap">
   <section class="weather-banner">
     <div class="weather-info">
+      <label class="wx-loc"><span>Location</span>
+        <select id="sel-weather-loc" aria-label="Choose the place for live temperature and humidity">
+          <option value="saltlake-sector-v" selected>Salt Lake Sector V</option>
+          <option value="newtown">New Town</option>
+          <option value="dumdum-airport">Dum Dum (Airport)</option>
+          <option value="baranagar">Baranagar</option>
+          <option value="central">Central Kolkata (Esplanade)</option>
+          <option value="howrah">Howrah</option>
+          <option value="ballygunge">Ballygunge</option>
+          <option value="kasba">Kasba</option>
+          <option value="jadavpur">Jadavpur</option>
+          <option value="tollygunge">Tollygunge</option>
+          <option value="behala">Behala</option>
+          <option value="garia">Garia</option>
+        </select></label>
       <div id="wx-stats" class="wx-stats" hidden></div>
-      <span id="weather-status">Loading Kolkata weather...</span>
+      <span id="weather-status">Loading weather...</span>
       <!-- app.js still writes into this; human.js shows it big in the note below -->
       <span id="weather-split-pill" class="pill">Suggested Split: 70/30</span>
     </div>
