@@ -1,4 +1,8 @@
 require('dotenv').config();
+const dns = require('dns');
+// Render containers often fail or time out on IPv6 routes to external APIs; force IPv4 first
+if (dns.setDefaultResultOrder) dns.setDefaultResultOrder('ipv4first');
+
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -39,8 +43,7 @@ app.use('/api/plan', apiLimiter);
 app.use('/api/chat', apiLimiter);
 app.use('/api/explain', apiLimiter);
 
-// ───────── Live weather (Open-Meteo), one cached reading per location ─────────
-// Open-Meteo values are model grid cells (about 1 to 10 km), so places close together can read the same.
+// ───────── Live weather (Open-Meteo + MET Norway fallback for Render cloud IPs) ─────────
 const DEFAULT_WEATHER_LOCATION = 'saltlake-sector-v';
 const WEATHER_LOCATIONS = {
   'saltlake-sector-v': { name: 'Salt Lake Sector V', lat: 22.5736, lon: 88.4338 },
@@ -57,32 +60,89 @@ const WEATHER_LOCATIONS = {
   'garia':             { name: 'Garia',              lat: 22.4639, lon: 88.3871 }
 };
 const WEATHER_TTL_MS = 10 * 60 * 1000;      // reuse a reading for 10 minutes
-const WEATHER_RETRY_MS = 60 * 1000;         // after a failure wait a minute before asking again
+const WEATHER_RETRY_MS = 15 * 1000;         // short retry cooldown (15s)
 const weatherCache = new Map();             // locationId -> { timestamp, data }
 const weatherFailedAt = new Map();          // locationId -> time of the last failed request
+
+// Compute NOAA / Steadman Apparent Temperature (Heat Index in °C) when using fallback provider
+function computeHeatIndexC(tempC, rh) {
+  if (tempC < 26.7) {
+    // Steadman apparent temperature for mild temperatures
+    const vp = (rh / 100) * 6.105 * Math.exp((17.27 * tempC) / (237.7 + tempC));
+    return Number((tempC + 0.33 * vp - 2.7).toFixed(1));
+  }
+  const T = tempC * 1.8 + 32;
+  const R = rh;
+  let HI = -42.379 + 2.04901523 * T + 10.14333127 * R
+    - 0.22475541 * T * R - 0.00683783 * T * T
+    - 0.05481717 * R * R + 0.00122874 * T * T * R
+    + 0.00085282 * T * R * R - 0.00000199 * T * T * R * R;
+  return Number((((HI - 32) * 5) / 9).toFixed(1));
+}
+
+function nowISTString() {
+  const ist = new Date(Date.now() + 5.5 * 3600 * 1000);
+  return ist.toISOString().slice(0, 16);
+}
 
 async function fetchLiveWeather(loc) {
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}` +
     `&current=temperature_2m,relative_humidity_2m,apparent_temperature&timezone=Asia%2FKolkata`;
-  const resp = await fetch(url, { signal: AbortSignal.timeout(8000), headers: { 'User-Agent': 'SHADE-Kolkata/1.0' } });
-  if (!resp.ok) throw new Error('Open-Meteo HTTP ' + resp.status);
-  const json = await resp.json();
-  const cur = json && json.current;
-  if (!cur || !Number.isFinite(cur.temperature_2m) || !Number.isFinite(cur.relative_humidity_2m) || !Number.isFinite(cur.apparent_temperature)) {
-    throw new Error('Open-Meteo returned no current reading');
+
+  // 1. Primary: Open-Meteo API
+  try {
+    const resp = await fetch(url, {
+      signal: AbortSignal.timeout(6500),
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; SHADE-Kolkata/1.0; +https://shade-tspl.onrender.com)',
+        'Accept': 'application/json'
+      }
+    });
+    if (!resp.ok) throw new Error('Open-Meteo HTTP ' + resp.status);
+    const json = await resp.json();
+    const cur = json && json.current;
+    if (cur && Number.isFinite(cur.temperature_2m) && Number.isFinite(cur.relative_humidity_2m) && Number.isFinite(cur.apparent_temperature)) {
+      return {
+        temp_c: Number(cur.temperature_2m.toFixed(1)),
+        humidity_pct: Math.round(cur.relative_humidity_2m),
+        heat_index_c: Number(cur.apparent_temperature.toFixed(1)),
+        observed_at: cur.time || nowISTString()
+      };
+    }
+    throw new Error('Open-Meteo returned incomplete payload');
+  } catch (omErr) {
+    console.warn(`[Weather] Open-Meteo primary failed (${omErr.message}), trying MET Norway fallback...`);
   }
+
+  // 2. Fallback for Render shared IPs: MET Norway Weather API (never blocks cloud IPs with a User-Agent)
+  const metUrl = `https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=${loc.lat}&lon=${loc.lon}`;
+  const metResp = await fetch(metUrl, {
+    signal: AbortSignal.timeout(7000),
+    headers: {
+      'User-Agent': 'SHADE-Kolkata-Planner/1.0 (https://shade-tspl.onrender.com)',
+      'Accept': 'application/json'
+    }
+  });
+  if (!metResp.ok) throw new Error('Weather providers failed (MET HTTP ' + metResp.status + ')');
+  const metJson = await metResp.json();
+  const details = metJson?.properties?.timeseries?.[0]?.data?.instant?.details;
+  if (!details || !Number.isFinite(details.air_temperature) || !Number.isFinite(details.relative_humidity)) {
+    throw new Error('Fallback weather returned no current reading');
+  }
+  const tempC = Number(details.air_temperature.toFixed(1));
+  const rh = Math.round(details.relative_humidity);
   return {
-    temp_c: cur.temperature_2m,
-    humidity_pct: cur.relative_humidity_2m,
-    heat_index_c: cur.apparent_temperature,
-    observed_at: cur.time || null
+    temp_c: tempC,
+    humidity_pct: rh,
+    heat_index_c: computeHeatIndexC(tempC, rh),
+    observed_at: nowISTString()
   };
 }
 
 async function getKolkataWeather(simulateHeatwave = false, manualAlert = null, locationId = DEFAULT_WEATHER_LOCATION) {
   const locKey = WEATHER_LOCATIONS[locationId] ? locationId : DEFAULT_WEATHER_LOCATION;
   const loc = WEATHER_LOCATIONS[locKey];
-  const location = { id: locKey, name: loc.name };
+  const location = { id: locKey, name: loc.name, lat: loc.lat, lon: loc.lon };
 
   if (simulateHeatwave) {
     const split = suggestSplit(43.8, 3);
@@ -418,11 +478,9 @@ app.post('/api/scenarios', async (req, res) => {
 
 // Parse budget from natural language message (e.g. "5cr", "5 crore", "15 lakh", "5.5 crore")
 function parseBudgetFromMessage(q) {
-  // e.g. "5cr", "5 cr", "5crore", "5 crore", "5.5 crore"
   const crMatch = q.match(/(\d+(?:\.\d+)?)\s*(?:cr(?:ore)?|c\.r\.)/i);
   if (crMatch) return Math.round(parseFloat(crMatch[1]) * 10000000);
 
-  // e.g. "50 lakh", "50l"
   const lakhMatch = q.match(/(\d+(?:\.\d+)?)\s*(?:lakh|l\b)/i);
   if (lakhMatch) return Math.round(parseFloat(lakhMatch[1]) * 100000);
 
@@ -451,19 +509,16 @@ app.post('/api/chat', async (req, res) => {
   const q = message.toLowerCase().trim();
   const toolTraces = [];
 
-  // --- 1. Parse budget from message text (e.g. "5cr", "5 crore", "15 lakh") ---
   const budgetFromMessage = parseBudgetFromMessage(q);
   if (budgetFromMessage !== null) {
     budget_inr = budgetFromMessage;
   }
 
-  // --- 2. Parse cooling share from message (e.g. "80% cooling", "split 60/40") ---
   const splitFromMessage = parseSplitFromMessage(q);
   if (splitFromMessage !== null) {
     cooling_share = splitFromMessage;
   }
 
-  // --- 3. Detect intent ---
   const isGreeting = /^(hi|hello|hey|namaste|hola|yo|sup|howdy|good (morning|afternoon|evening))\b/.test(q);
   const isHelp = /\b(help|what can you|what do you|how do|commands|options|capabilities)/.test(q);
   const isWeatherOnly = /\b(weather|temperature|heat|hot|cool today|climate|forecast)\b/.test(q) && q.length < 40;
@@ -472,14 +527,12 @@ app.post('/api/chat', async (req, res) => {
   const isCooling = /\b(cool roof|tree|trees|cooling|cool|roof|shade)\b/.test(q);
   const isBudget = /\b(budget|crore|cr|lakh|spend|spending|allocat|cost|money|fund)\b/.test(q);
 
-  // --- 4. Run engine tools ---
   const weather = await getKolkataWeather(false, null);
   toolTraces.push({
     tool: "get_weather()",
     output: { heat_index_c: weather.heat_index_c, alert: weather.alert_name, suggested_split: weather.suggested_split }
   });
 
-  // Check if user asked about a specific ward number
   const wardMatch = q.match(/ward\s*(\d+)/i) || (q.match(/\b(\d{1,3})\b/) && !budgetFromMessage);
   let wardDetail = null;
   if (wardMatch) {
@@ -500,7 +553,6 @@ app.post('/api/chat', async (req, res) => {
     }
   }
 
-  // Run the plan engine (only if not a pure greeting or weather-only query)
   let plan = null;
   if (!isGreeting && !isHelp && !isWeatherOnly) {
     plan = executeFullPlan({ budgetInr: Number(budget_inr), coolingShare: Number(cooling_share) });
@@ -516,7 +568,6 @@ app.post('/api/chat', async (req, res) => {
     });
   }
 
-  // --- 5. Build grounded reply based on intent ---
   const budgetCr = (budget_inr / 10000000).toFixed(1);
   const topCoolingList = plan
     ? plan.cooling.picks.slice(0, 4).map(p => `Ward ${p.ward_no} (${p.ward_name}, ${p.type.replace('_', ' ')}, stability ${Math.round(p.stability * 100)}%)`).join("; ")
@@ -560,7 +611,7 @@ app.post('/api/chat', async (req, res) => {
   } else if (wardDetail && plan) {
     const ints = cache.interventions.filter(i => i.ward_id === wardDetail.id);
     const bestInt = ints.length > 0 ? ints.reduce((a, b) => (a.cooling_gain_c > b.cooling_gain_c ? a : b)) : null;
-    reply = `**Ward ${wardDetail.ward_no} — ${wardDetail.name}**\n\n` +
+    reply = `**Ward ${wardDetail.ward_no} — ${wardDetail.name}**\n` +
       `• **Surface Temp:** ${wardDetail.mean_temp_c}°C | **Population:** ${wardDetail.population.toLocaleString()} | **Vulnerability Score:** ${wardDetail.vulnerability}\n` +
       `• **Slum Share:** ${Math.round(wardDetail.pct_slum * 100)}% | **Building Density:** ${Math.round(wardDetail.building_density * 100)}% | **Poor Roof Share:** ${Math.round(wardDetail.pct_poor_roof * 100)}%\n` +
       `• **Elderly (60+):** ${Math.round(wardDetail.pct_60plus * 100)}% | **Children (<6):** ${Math.round(wardDetail.pct_under6 * 100)}%\n` +
@@ -590,7 +641,6 @@ app.post('/api/chat', async (req, res) => {
         : `**Person-degrees averted:** ${plan.cooling.person_degrees_averted.toLocaleString()} | **People reached:** ${plan.cooling.people_reached.toLocaleString()}`);
 
   } else if (plan) {
-    // Generic plan summary (budget or general question)
     const budgetNote = budgetFromMessage !== null
       ? `(budget parsed from your message: "${message}")`
       : `(budget from slider)`;
@@ -615,12 +665,9 @@ app.post('/api/chat', async (req, res) => {
 });
 
 // ---------- 10. RAG Explainer (Gemini) ----------
-// Retrieves facts from the live plan, weather, model card and ward data, then asks
-// Gemini to explain the website's decisions using ONLY that retrieved context.
 const GEMINI_MODELS = [...new Set([process.env.GEMINI_MODEL, 'gemini-3.8-flash', 'gemini-flash-latest', 'gemini-flash-lite-latest'].filter(Boolean))];
 const clampNum = (v, lo, hi, dflt) => (Number.isFinite(Number(v)) && v !== '' && v !== null ? Math.max(lo, Math.min(hi, Number(v))) : dflt);
 
-// Shrink objects for the prompt: round numbers, cap arrays, drop heavy fields
 function slim(v, depth = 0) {
   if (v === null || v === undefined) return v;
   if (typeof v === 'number') return Number.isInteger(v) ? v : Number(v.toFixed(3));
@@ -674,7 +721,6 @@ function buildKnowledgeChunks(plan, weather, params, question) {
   add('model_card', 'Model card', /model|accura|r2|rmse|feature|ndvi|albedo|building|water|valid|trust|reliab/,
     JSON.stringify(slim(cache.modelCard)));
 
-  // Ward chunks: wards the user mentions + the top cooling picks
   const wanted = new Set();
   for (const m of q.matchAll(/ward\s*(?:no\.?\s*)?(\d{1,3})/g)) wanted.add(Number(m[1]));
   for (const w of cache.wards) if (w.name && w.name.length > 3 && q.includes(w.name.toLowerCase())) wanted.add(w.ward_no);
@@ -737,7 +783,7 @@ async function callGeminiModel(model, systemText, contents) {
       }
       const data = await resp.json();
       if (!resp.ok && resp.status === 400 && useThinkingCfg && /think/i.test(data?.error?.message || '')) {
-        useThinkingCfg = false; // this model does not accept the thinking setting
+        useThinkingCfg = false;
         attempt--;
         continue;
       }
@@ -760,7 +806,6 @@ async function callGeminiAll(systemText, contents) {
     } catch (err) {
       lastErr = err;
       console.error(`[Explain] model ${model} failed: ${err.message}`);
-      // move on to the next model when this one is unavailable or too slow
       if (!/no longer available|not found|not supported|is not available|404|aborted|timeout|fetch failed|high demand|overloaded|unavailable|quota|rate limit|429|503/i.test(err.message)) break;
     }
   }
@@ -799,7 +844,6 @@ async function callOpenAI(systemText, contents) {
   throw new Error('OpenAI is busy.');
 }
 
-// Tries OpenAI first when OPENAI_API_KEY is set (set LLM_FIRST=gemini to flip), then the other provider
 async function callLLM(systemText, contents) {
   const hasG = !!process.env.GEMINI_API_KEY, hasO = !!process.env.OPENAI_API_KEY;
   const openaiFirst = hasO && process.env.LLM_FIRST !== 'gemini';
@@ -824,7 +868,6 @@ app.post('/api/explain', async (req, res) => {
     const message = String(req.body.message || '').trim().slice(0, 1000);
     if (!message) return res.status(400).json({ error: "Empty question." });
 
-    // Rebuild the exact plan the user is looking at from the params the website last sent
     const pp = req.body.plan_params && typeof req.body.plan_params === 'object' ? req.body.plan_params : {};
     const reliefTypes = ['water_point', 'cool_room', 'mobile_unit', 'school_ors'];
     const params = {
@@ -879,8 +922,6 @@ app.post('/api/explain', async (req, res) => {
 // Start Server after loading DB into memory
 loadCacheFromDB().then(() => {
   app.listen(PORT, () => {
-    console.log(`\n======================================================`);
     console.log(` S.H.A.D.E. Server running at http://localhost:${PORT}`);
-    console.log(`======================================================\n`);
   });
 });
